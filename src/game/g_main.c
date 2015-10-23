@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "g_local.h"
 
 #define QVM_NAME       "Mjws Pbot"
-#define QVM_VERSIONNUM      "3.0"
+#define QVM_VERSIONNUM      "4.0"
 
 level_locals_t  level;
 
@@ -222,7 +222,6 @@ vmCvar_t  g_welcomeMsgTime;
 vmCvar_t  g_devmapVotes;
 
 //ROTAX
-vmCvar_t  g_ambush;
 vmCvar_t  g_ambush_stage;
 vmCvar_t  g_ambush_stage_limit;
 vmCvar_t  g_ambush_killstonextstage;
@@ -232,7 +231,7 @@ vmCvar_t  g_ambush_sec_to_start;
 vmCvar_t  g_ambush_stage_suicide;
 vmCvar_t  g_ambush_no_egg_ffoff;
 vmCvar_t  g_ambush_kill_spawns;
-vmCvar_t  g_ambush_att_buildables;
+vmCvar_t  g_ambush_attackBuildables;
 vmCvar_t  g_ambush_range;
 vmCvar_t  g_ambush_hbuild_dmg;
 vmCvar_t  g_ambush_abuild_dmg;
@@ -251,16 +250,6 @@ vmCvar_t  g_level4_range;
 vmCvar_t  g_bot;
 vmCvar_t  g_bot_spawnprotection;
 vmCvar_t  g_bot_evolve;
-vmCvar_t  g_bot_mgun;
-vmCvar_t  g_bot_shotgun;
-vmCvar_t  g_bot_psaw;
-vmCvar_t  g_bot_lasgun;
-vmCvar_t  g_bot_mdriver;
-vmCvar_t  g_bot_chaingun;
-vmCvar_t  g_bot_minigun;
-vmCvar_t  g_bot_prifle;
-vmCvar_t  g_bot_flamer;
-vmCvar_t  g_bot_lcannon;
 
 vmCvar_t  g_nade_damage;
 vmCvar_t  g_nade_range;
@@ -405,16 +394,6 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_level3UPG_range, "g_level3UPG_range", "600", CVAR_ARCHIVE, 0, qfalse },
   { &g_level4_range, "g_level4_range", "300", CVAR_ARCHIVE, 0, qfalse },
   { &g_bot_evolve, "g_bot_evolve", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_mgun, "g_bot_mgun", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_shotgun, "g_bot_shotgun", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_psaw, "g_bot_psaw", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_lasgun, "g_bot_lasgun", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_mdriver, "g_bot_mdriver", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_chaingun, "g_bot_chaingun", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_minigun, "g_bot_minigun", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_prifle, "g_bot_prifle", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_flamer, "g_bot_flamer", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_bot_lcannon, "g_bot_lcannon", "1", CVAR_ARCHIVE, 0, qfalse },
 
   { &g_nade_range, "g_nade_range", "200", CVAR_ARCHIVE, 0, qfalse },
   { &g_nade_damage, "g_nade_damage", "10000", CVAR_ARCHIVE, 0, qfalse },
@@ -531,13 +510,12 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_ambush_sec_to_start, "g_ambush_sec_to_start", "0", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_stage_suicide, "g_ambush_stage_suicide", "0", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_kill_spawns, "g_ambush_kill_spawns", "1", CVAR_ARCHIVE, 0, qfalse  },
-  { &g_ambush_att_buildables, "g_ambush_att_buildables", "1", CVAR_ARCHIVE, 0, qfalse  },
+  { &g_ambush_attackBuildables, "g_ambush_attackBuildables", "1", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_abuild_dmg, "g_ambush_abuild_dmg", "1", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_hbuild_dmg, "g_ambush_hbuild_dmg", "1", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_range, "g_ambush_range", "7000", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_stage_limit, "g_ambush_stage_limit", "30", CVAR_ARCHIVE, 0, qfalse  },
   { &g_ambush_stage, "g_ambush_stage", "1", CVAR_ARCHIVE, 0, qfalse  },
-  { &g_ambush, "g_ambush", "1", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qfalse  },
   
   //Custom Cvar
   { &g_startwep, "g_startwep", "default", CVAR_ARCHIVE, 0, qfalse },
@@ -824,11 +802,11 @@ void G_PathLoad( void )
 		level.paths[i].coord[0] = 0;
 		level.paths[i].coord[1] = 0;
 		level.paths[i].coord[2] = 0;
-		level.paths[i].nextid[0] = -1;
-		level.paths[i].nextid[1] = -1;
-		level.paths[i].nextid[2] = -1;
-		level.paths[i].nextid[3] = -1;
-		level.paths[i].nextid[4] = -1;
+		level.paths[i].neighbourID[0] = -1;
+		level.paths[i].neighbourID[1] = -1;
+		level.paths[i].neighbourID[2] = -1;
+		level.paths[i].neighbourID[3] = -1;
+		level.paths[i].neighbourID[4] = -1;
 		level.paths[i].random = -1;
 		level.paths[i].timeout = 10000;
 		level.paths[i].action = 0;
@@ -862,11 +840,11 @@ void G_PathLoad( void )
 						&level.paths[level.numPaths].coord[0], 
 						&level.paths[level.numPaths].coord[1], 
 						&level.paths[level.numPaths].coord[2],
-						&level.paths[level.numPaths].nextid[0],
-						&level.paths[level.numPaths].nextid[1],
-						&level.paths[level.numPaths].nextid[2],
-						&level.paths[level.numPaths].nextid[3],
-						&level.paths[level.numPaths].nextid[4],
+						&level.paths[level.numPaths].neighbourID[0],
+						&level.paths[level.numPaths].neighbourID[1],
+						&level.paths[level.numPaths].neighbourID[2],
+						&level.paths[level.numPaths].neighbourID[3],
+						&level.paths[level.numPaths].neighbourID[4],
 						&level.paths[level.numPaths].random,
 						&level.paths[level.numPaths].timeout,
 						&level.paths[level.numPaths].action ); 

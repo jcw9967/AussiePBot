@@ -1710,19 +1710,19 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   ent->waterlevel = 0;
   ent->watertype = 0;
   ent->flags = 0;
-  ent->state = FINDNEWPATH;
+  ent->state = FIND_NEW_PATH;
   ent->botEnemy = NULL;
   ent->pathid = -1;
   ent->movepathid = -1;
   ent->discpathid = -1;
-  ent->lastpathid = -1;
+  ent->lastPathID = -1;
   ent->timeFoundPath = level.time;
   ent->evolvetime = level.time;
   ent->enemytime = level.time;
   if(ent != spawn)
   ent->spawnprotection = level.time;
   ent->boss = qfalse;
-  ent->patheditor = qfalse;
+  ent->pathEditor = qfalse;
   // calculate each client's acceleration
   ent->evaluateAcceleration = qtrue;
 
@@ -1735,29 +1735,43 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
 
   BG_FindBBoxForClass( ent->client->pers.classSelection, ent->r.mins, ent->r.maxs, NULL, NULL, NULL );
 
-  if( client->sess.sessionTeam != TEAM_SPECTATOR )
-  {
-    mhp = BG_FindHealthForClass( ent->client->pers.classSelection );
-    client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = mhp;
-    if(ent->client->pers.teamSelection == PTE_ALIENS && g_ambush.integer > 0)
-    {
-      if(ent == spawn)
-      {
-        if( g_ambush_stage.integer < 10 )
-          hp = mhp;
-        else
-          hp = (long long)(mhp + (mhp * (g_ambush_stage.integer - 9) / div));
-      }
-      if( hp > 30000 )
-        client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = 30000;
-      else if( hp <= 0 )
-        client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = mhp;
-      else
-        client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = hp;
-    }
-  }
-  else
-    client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = 100;
+	if( client->sess.sessionTeam != TEAM_SPECTATOR )
+	{
+		mhp = BG_FindHealthForClass( ent->client->pers.classSelection );
+		client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = mhp;
+
+		if( ent->client->pers.teamSelection == PTE_ALIENS )
+		{
+			if( ent == spawn )
+			{
+				if( g_ambush_stage.integer < 10 )
+				{
+					hp = mhp;
+				}
+				else
+				{
+					hp = (long long)( mhp + ( mhp * ( g_ambush_stage.integer - 9 ) / div ) );
+				}
+			}
+			
+			if( hp > 30000 )
+			{
+				client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = 30000;
+			}
+			else if( hp <= 0 )
+			{
+				client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = mhp;
+			}
+			else
+			{
+				client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = hp;
+			}
+		}
+	}
+	else
+	{
+		client->pers.maxHealth = client->ps.stats[ STAT_MAX_HEALTH ] = 100;
+	}
 
   // clear entity values
   if( ent->client->pers.classSelection == PCL_HUMAN )
@@ -2027,7 +2041,7 @@ void ClientDisconnect( int clientNum )
   ent->client->pers.connected = CON_DISCONNECTED;
   ent->client->ps.persistant[ PERS_TEAM ] = TEAM_FREE;
   ent->client->sess.sessionTeam = TEAM_FREE;
-  ent->patheditor = qfalse;
+  ent->pathEditor = qfalse;
 
   trap_SetConfigstring( CS_PLAYERS + clientNum, "");
 

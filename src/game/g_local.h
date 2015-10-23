@@ -58,8 +58,7 @@ typedef struct gclient_s gclient_t;
 
 #define BOT_JUMP		1
 #define BOT_WALLCLIMB		2
-#define BOT_KNEEL		3
-#define BOT_POUNCE		4
+#define BOT_POUNCE		3
 
 // movers are things like doors, plats, buttons, etc
 typedef enum
@@ -81,35 +80,23 @@ typedef enum
 } moverState_t;
 
 #define SP_PODIUM_MODEL   "models/mapobjects/podium/podium4.md3"
-
-typedef enum
-{
-  BOT_REGULAR = 1,
-  BOT_IDLE,
-  BOT_ATTACK,
-  BOT_STAND_GROUND,
-  BOT_DEFENSIVE,
-  BOT_FOLLOW_FRIEND_PROTECT,
-  BOT_FOLLOW_FRIEND_ATTACK,
-  BOT_FOLLOW_FRIEND_IDLE,
-  BOT_TEAM_KILLER
-} botCommand_t;
+#define MAX_PATH_NEIGHBOURS 5
 
 typedef struct
 {
   vec3_t	coord;
-  int           nextid[5];
-  int           random;
-  int           timeout;
-  int           action;
+  int		neighbourID[MAX_PATH_NEIGHBOURS];
+  int		random;
+  int		timeout;
+  int		action;
 } path;
 
 typedef enum
 {
-  TARGETPATH,
-  FINDNEXTPATH,
-  FINDNEWPATH,
-  LOST
+  ATTACKING,
+  TARGET_PATH,
+  FIND_NEXT_PATH,
+  FIND_NEW_PATH
 } botstate;
 
 //============================================================================
@@ -226,28 +213,25 @@ struct gentity_s
   int               noise_index;
 
   //for targeting following
-  botCommand_t		botCommand;
   gentity_t		*botEnemy;
-  gentity_t		*botFriend;
   int			enemytime;
-  int			botFriendLastSeen;  
   int			botEnemyLastSeen;
   int			botSkillLevel;
-  int			botTeam;
   qboolean		nextNode;
   qboolean		pathChosen;
-  int			targetPath;
-  int			targetNode;
+  int			targetPathIndex;
+  int			targetPathSize;
+  int			targetPathIndexes[MAX_PATHS];
   int			timeFoundPath;
   botstate		state;
   int			buytime;
   int			evolvetime;
-  qboolean		isblocked;
+  qboolean		isBlocked;
   //vec3_t		OldPos[20];
   int			pathid;
   int			movepathid;
   int			discpathid;
-  int			lastpathid;
+  int			lastPathID;
   qboolean		boss;
   //qboolean		aim;
   // timing variables
@@ -256,9 +240,8 @@ struct gentity_s
   float			random;
   int			jumptime;
   int			searchtime;
-  int			checktime;
  // int			frametime;
-  qboolean		patheditor;
+  qboolean		pathEditor;
   pTeam_t           stageTeam;
   stage_t           stageStage;
 
@@ -916,11 +899,10 @@ char      *G_NewString( const char *string );
 //ROTAX
 // g_bot.c
 //
-void G_BotAdd( char *name, int team, int skill, int ignore );
+void G_BotAdd( char *name, int skill, int ignore );
 void G_BotDel( int clientNum );
 void G_DeleteBots( void );
 void G_BotReload( gentity_t *ent, int clientNum );
-void G_BotCmd( gentity_t *master, int clientNum, char *command );
 void G_BotThink( gentity_t *self );
 void G_FrameAim( gentity_t *self );
 void G_FastThink( gentity_t *self );
@@ -1567,11 +1549,10 @@ extern  vmCvar_t  g_ambush_rebuild_time;
 extern  vmCvar_t  g_ambush_sec_to_start;
 extern  vmCvar_t  g_ambush_stage_suicide;
 extern  vmCvar_t  g_ambush_no_egg_ffoff;
-extern  vmCvar_t  g_ambush;
 extern  vmCvar_t  g_ambush_stage;
 extern  vmCvar_t  g_ambush_stage_limit;
 extern  vmCvar_t  g_ambush_kill_spawns;
-extern  vmCvar_t  g_ambush_att_buildables;
+extern  vmCvar_t  g_ambush_attackBuildables;
 extern  vmCvar_t  g_ambush_range;
 extern  vmCvar_t  g_ambush_hbuild_dmg;
 extern  vmCvar_t  g_ambush_abuild_dmg;
@@ -1590,16 +1571,6 @@ extern  vmCvar_t  g_level4_range;
 extern  vmCvar_t  g_bot;
 extern  vmCvar_t  g_bot_spawnprotection;
 extern  vmCvar_t  g_bot_evolve;
-extern  vmCvar_t  g_bot_mgun;
-extern  vmCvar_t  g_bot_shotgun;
-extern  vmCvar_t  g_bot_psaw;
-extern  vmCvar_t  g_bot_lasgun;
-extern  vmCvar_t  g_bot_mdriver;
-extern  vmCvar_t  g_bot_chaingun;
-extern  vmCvar_t  g_bot_minigun;
-extern  vmCvar_t  g_bot_prifle;
-extern  vmCvar_t  g_bot_flamer;
-extern  vmCvar_t  g_bot_lcannon;
 extern  vmCvar_t  g_steepbuild;
 extern  vmCvar_t  g_nobuildtimer;
 
@@ -1671,4 +1642,4 @@ void      trap_SnapVector( float *v );
 void      trap_SendGameStat( const char *data );
 
 gentity_t *spawnnode( gentity_t *self, long id );
-void nodethink(gentity_t *ent);
+void nodeThink(gentity_t *ent);

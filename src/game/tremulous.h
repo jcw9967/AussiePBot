@@ -523,7 +523,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MGTURRET_VERTICALCAP        30  // +/- maximum pitch
 #define MGTURRET_REPEAT             200
 #define MGTURRET_K_SCALE            1.0f
-#define MGTURRET_RANGE              400.0f
+#define MGTURRET_RANGE              350.0f
 #define MGTURRET_SPREAD             200
 #define MGTURRET_DMG                5 //4
 #define MGTURRET_DCC_ANGULARSPEED       10
@@ -536,10 +536,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define TESLAGEN_HEALTH             220
 #define TESLAGEN_SPLASHDAMAGE       50
 #define TESLAGEN_SPLASHRADIUS       100
-#define TESLAGEN_REPEAT             100
-#define TESLAGEN_K_SCALE            4.0f
-#define TESLAGEN_RANGE              350 //250
-#define TESLAGEN_DMG                8
+#define TESLAGEN_REPEAT             200
+#define TESLAGEN_K_SCALE            2.0f
+#define TESLAGEN_RANGE              300 //250
+#define TESLAGEN_DMG                16
 
 #define DC_BP                       8
 #define DC_BT                       10000

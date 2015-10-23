@@ -766,9 +766,9 @@ void Cmd_Team_f( gentity_t *ent )
   }
 
   trap_Argv( 1, s, sizeof( s ) );
-  if( Q_stricmp( s, "aliens" ) && g_ambush.integer > 0 && level.humanTeamLocked)
+  if( Q_stricmp( s, "aliens" ) && level.humanTeamLocked )
   {
-    strcpy(s,"humans");
+    strcpy( s,"humans" );
   }
 
   if( !strlen( s ) )
@@ -3577,13 +3577,6 @@ void Cmd_Buy_f( gentity_t *ent )
   }
   else if( upgrade != UP_NONE )
   {
-    //ROTAX  
-   /* if( g_ambush.integer && upgrade == UP_JETPACK)
-    {
-      trap_SendServerCommand( ent-g_entities, va( "print \"You can't buy jetpack in Ambush mod\n\"" ) );
-      return;
-    }*/
-    
     //already got this?
     if( BG_InventoryContainsUpgrade( upgrade, ent->client->ps.stats ) )
     {
@@ -4971,529 +4964,593 @@ void Cmd_Ignore_f( gentity_t *ent )
  */
 void Cmd_Node_f( gentity_t *ent )
 {
-  char cmd[ MAX_TOKEN_CHARS ] = "";
-  char timeout[ MAX_TOKEN_CHARS ] = "";
-  char action[ MAX_TOKEN_CHARS ] = "";
-  int countz = 0;
-  int countz2 = 0;
-  fileHandle_t f;
-  int len;
-  char *s;
-  char map[ MAX_QPATH ];
-  char fileName[ MAX_OSPATH ];
-  int i,i2,distance,Ax,Ay,Az,Bx,By,Bz = 0;
-  int timeout2 = 0;
-  int nearbynodeid[ MAX_PATHS ];
-  int numnearby = 0;
-  qboolean delpath = qfalse;
-  qboolean pathfound = qfalse;
-  qboolean linked = qfalse;
-  qboolean linked2 = qfalse;
-  qboolean deleted = qfalse;
-  gentity_t *node;
+	char cmd[MAX_TOKEN_CHARS] = "";
+	char timeout[MAX_TOKEN_CHARS] = "";
+	char action[MAX_TOKEN_CHARS] = "";
+	int countz = 0;
+	int countz2 = 0;
+	fileHandle_t f;
+	int len;
+	char *s;
+	char map[MAX_QPATH];
+	char fileName[MAX_OSPATH];
+	int i, j, distance, Ax, Ay, Az, Bx, By, Bz;
+	int timeout2 = 0;
+	int nearbyNodeID[MAX_PATHS];
+	int numnearby = 0;
+	qboolean delpath = qfalse;
+	qboolean pathfound = qfalse;
+	qboolean linked = qfalse;
+	qboolean linked2 = qfalse;
+	qboolean deleted = qfalse;
+	gentity_t *node;
 
-  if(g_pathediting.integer <= 0)
-  {
-    trap_SendServerCommand( ent-g_entities, "print \"g_pathediting is off.\n\"");
-    return;
-  }
-  if(!g_pathpassword.string[0])
-  {
-    trap_SendServerCommand( ent-g_entities, "print \"Password not set (g_pathpassword).\n\"");
-    return;
-  }
-  if(!ent->patheditor)
-  {
-    trap_SendServerCommand( ent-g_entities, "print \"Wrong password (!password).\n\"");
-    return;
-  }
-  trap_Cvar_VariableStringBuffer( "mapname", map, sizeof( map ) );
-  for(i = 0; i < level.numPaths; i++ )
-  {
-    Ax = level.paths[i].coord[0];
-    Ay = level.paths[i].coord[1];
-    Az = level.paths[i].coord[2];
-    Bx = ent->s.pos.trBase[0];
-    By = ent->s.pos.trBase[1];
-    Bz = ent->s.pos.trBase[2];
-    deleted = qfalse;
-    for(i2 = 0;i2 < 5;i2++)
-    {
-      if(level.paths[i].nextid[i2] < 0)
-      {
-        deleted = qtrue;
-      }
-    }
-    if(deleted == qtrue)
-    {
-      deleted = qfalse;
-      continue;
-    }
-    distance = sqrt((Ax - Bx)*(Ax - Bx) + (Ay - By)*(Ay - By) + (Az - Bz)*(Az - Bz));
-    if(distance < 75)
-    {
-      nearbynodeid[numnearby] = i;
-      numnearby++;
-      continue;
-    }
-  }
-  if(G_SayArgc( ) != 2 && G_SayArgc( ) != 3)
-  {
-    trap_SendServerCommand( ent-g_entities, "print \"Usage: node [add|connect|disconnect|random|move|cancel|timeout|action|clear|delete|save]\n\"");
-    for(i = 0;i < numnearby; i++)
-    {
-      trap_SendServerCommand( ent-g_entities, va("print \"^5Nearby Node: %d ^2(X:%f Y:%f Z:%f) ^1%d %d %d %d %d ^3Random:^7%d ^3Timeout:^7%d ^3Action:^7%d\n\"", nearbynodeid[i],
-        level.paths[nearbynodeid[i]].coord[0],
-        level.paths[nearbynodeid[i]].coord[1],
-        level.paths[nearbynodeid[i]].coord[2],
-        level.paths[nearbynodeid[i]].nextid[0],
-        level.paths[nearbynodeid[i]].nextid[1],
-        level.paths[nearbynodeid[i]].nextid[2],
-        level.paths[nearbynodeid[i]].nextid[3],
-        level.paths[nearbynodeid[i]].nextid[4],
-        level.paths[nearbynodeid[i]].random,
-        level.paths[nearbynodeid[i]].timeout,
-        level.paths[nearbynodeid[i]].action) );
-    }
-    return;
-  }
-  if( G_SayArgc() == 2 || G_SayArgc() == 3 )
-  {
-    trap_Argv( 1, cmd, sizeof( cmd ) );
-    if(numnearby > 1 && Q_stricmp( cmd, "cancel" ) && Q_stricmp( cmd, "save" ) )
-    {
-      trap_SendServerCommand( ent-g_entities, "print \"Too many nodes nearby.\n\"");
-      return;
-    }
-    if( G_SayArgc( ) == 3 && !Q_stricmp( cmd, "timeout" ) )
-    {
-      if( numnearby <= 0 )
-      {
-        trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
-        return;
-      }
-      trap_Argv( 2, timeout, sizeof( timeout ) );
-      timeout2 = atoi(timeout);
-      if( timeout2 < 0 )
-      {
-        timeout2 = 500;
-      }
-      else if( timeout2 > 100000 )
-      {
-        timeout2 = 100000;
-      }
-      level.paths[nearbynodeid[0]].timeout = timeout2;
-      trap_SendServerCommand( ent-g_entities, va("print \"Node timeout set to %d ms.\n\"",timeout2));
-      return;
-    }
-    else if(G_SayArgc( ) == 3 && !Q_stricmp( cmd, "action" ))
-    {
-      if(numnearby <= 0)
-      {
-        trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"");
-        return;
-      }
-      trap_Argv( 2, action, sizeof( action ) );
-      if(!Q_stricmp( action, "jump" ))
-      {
-        level.paths[nearbynodeid[0]].action = BOT_JUMP;
-      }
-      else if(!Q_stricmp( action, "wallclimb" ))
-      {
-        level.paths[nearbynodeid[0]].action = BOT_WALLCLIMB;
-      }
-      else if(!Q_stricmp( action, "kneel" ))
-      {
-        level.paths[nearbynodeid[0]].action = BOT_KNEEL;
-      }
-      else if(!Q_stricmp( action, "pounce" ))
-      {
-        level.paths[nearbynodeid[0]].action = BOT_POUNCE;
-      }
-      else if(!Q_stricmp( action, "none" ))
-      {
-        level.paths[nearbynodeid[0]].action = 0;
-      }
-      else
-      {
-        trap_SendServerCommand( ent-g_entities, "print \"Unknown action (jump, wallclimb, kneel, pounce, none)\n\"");return;}
-        trap_SendServerCommand( ent-g_entities, "print \"Node action set.\n\"");
-        return;	
-      }
-      else if( !Q_stricmp( cmd, "add" ) )
-      {
-        if(numnearby > 0)
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"Too close to another node.\n\"");
-          return;
-        }
-        if(level.numPaths >= MAX_PATHS)
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"Reached Max amount of nodes.\n\"" );
-          return;
-        }
-        for( i = 0; i < level.numPaths; i++ )
-        {
-          for( i2 = 0;i2 < 5;i2++ )
-          {
-            if( level.paths[i].nextid[i2] < 0 )
-            {
-              pathfound = qtrue;
-            }
-          }
-          if( pathfound == qtrue )
-          {
-            break;
-          }
-        }
-        if( pathfound == qtrue )
-        {
-          level.paths[i].coord[0] = ent->s.pos.trBase[0];
-          level.paths[i].coord[1] = ent->s.pos.trBase[1];
-          level.paths[i].coord[2] = ent->s.pos.trBase[2];
-          level.paths[i].nextid[0] = 1000 + MAX_PATHS;
-          level.paths[i].nextid[1] = 1000 + MAX_PATHS;
-          level.paths[i].nextid[2] = 1000 + MAX_PATHS;
-          level.paths[i].nextid[3] = 1000 + MAX_PATHS;
-          level.paths[i].nextid[4] = 1000 + MAX_PATHS;
-          level.paths[i].random = 0;
-          level.paths[i].timeout = 10000;
-          level.paths[i].action = 0;
-          trap_SendServerCommand( ent-g_entities, va( "print \"Saved Node #%d.\n\"", i ) );
-          if( level.drawpath == qtrue )
-          {
-            node = spawnnode( ent,i );
-          }
-        }
-        else
-        {
-          level.paths[level.numPaths].coord[0] = ent->s.pos.trBase[0];
-          level.paths[level.numPaths].coord[1] = ent->s.pos.trBase[1];
-          level.paths[level.numPaths].coord[2] = ent->s.pos.trBase[2];
-          level.paths[level.numPaths].nextid[0] = 1000 + MAX_PATHS;
-          level.paths[level.numPaths].nextid[1] = 1000 + MAX_PATHS;
-          level.paths[level.numPaths].nextid[2] = 1000 + MAX_PATHS;
-          level.paths[level.numPaths].nextid[3] = 1000 + MAX_PATHS;
-          level.paths[level.numPaths].nextid[4] = 1000 + MAX_PATHS;
-          level.paths[level.numPaths].random = 0;
-          level.paths[level.numPaths].timeout = 10000;
-          level.paths[level.numPaths].action = 0;
-          trap_SendServerCommand( ent-g_entities, va("print \"Saved Node #%d.\n\"", level.numPaths ) );
-          if( level.drawpath == qtrue )
-          {
-            node = spawnnode( ent,level.numPaths );
-          }
-          level.numPaths++;
-        }
-      }
-      else if( !Q_stricmp( cmd, "connect" ) )
-      {
-        if( numnearby <= 0 )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"");
-          return;
-        }
-        ent->discpathid = -1;
-        ent->movepathid = -1;
-        if( ent->pathid < 0 || ent->pathid >= level.numPaths )
-        {
-          ent->pathid = nearbynodeid[0];
-          trap_SendServerCommand( ent-g_entities, va("print \"Node #%d selected. Now select another node to connect to.\n\"", nearbynodeid[0] ) );
-          return;
-        }
-        else if( ent->pathid > -1 && ent->pathid < level.numPaths )
-        {
-          linked = qfalse;
-          linked2 = qfalse;
-          pathfound = qfalse;
-          if( nearbynodeid[0] == ent->pathid )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
-            ent->pathid = -1;
-            return;
-          }
-          for( i = 0; i < 5; i++ )
-          {
-            if( level.paths[nearbynodeid[0]].nextid[i] < level.numPaths )
-            {
-              countz++;
-            }
-            if( level.paths[ent->pathid].nextid[i] < level.numPaths )
-            {
-              countz2++;
-            }
-            if( level.paths[nearbynodeid[0]].nextid[i] == ent->pathid )
-            {
-              linked = qtrue;
-            }
-            if( level.paths[ent->pathid].nextid[i] == nearbynodeid[0] )
-            {
-              linked2 = qtrue;
-            }
-          }
-          if( countz >= 5 )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"This node is full.\n\"" );
-            return;
-          }
-          if( countz2 >= 5 )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Selected node is full.\n\"" );
-            ent->pathid = -1;
-            return;
-          }
-          if( linked == qtrue && linked2 == qtrue )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Both nodes are already linked.\n\"");
-            ent->pathid = -1;
-            return;
-          }
-          countz = 0;
-          countz2 = 0;
-          for( i = 0; i < 5; i++ )
-          {
-            if( level.paths[nearbynodeid[0]].nextid[i] >= MAX_PATHS )
-            {
-              countz = i;
-              i = 5;
-              break;
-            }
-          }
-          for( i = 0; i < 5; i++ )
-          {
-            if( level.paths[ent->pathid].nextid[i] >= MAX_PATHS )
-            {
-              countz2 = i;
-              i = 5;
-              break;
-            }
-          }
-          if( linked == qtrue )
-          {
-            trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is already linked to selected. Linking selected to this node.\n\"", nearbynodeid[0] ) );
-            level.paths[ent->pathid].nextid[countz2] = nearbynodeid[0];
-            trap_SendServerCommand( ent-g_entities, va( "print \"#%d ----> #%d \n\"", ent->pathid, nearbynodeid[0] ) );
-            ent->pathid = -1;
-            return;
-          }
-          if( linked2 == qtrue )
-          {
-            trap_SendServerCommand( ent-g_entities, va( "print \"Selected node #%d is already linked to this. Linking this to selected node.\n\"", ent->pathid ) );
-            level.paths[nearbynodeid[0]].nextid[countz] = ent->pathid;
-            trap_SendServerCommand( ent-g_entities, va( "print \"#%d ----> #%d \n\"", nearbynodeid[0], ent->pathid ) );
-            ent->pathid = -1;
-            return;
-          }
-          if( linked == qfalse && linked2 == qfalse )
-          {
-            level.paths[ent->pathid].nextid[countz2] = nearbynodeid[0];
-            level.paths[nearbynodeid[0]].nextid[countz] = ent->pathid;
-            trap_SendServerCommand( ent-g_entities, va( "print \"#%d <---> #%d \n\"", nearbynodeid[0], ent->pathid ) );
-            ent->pathid = -1;
-            return;
-          }
-        }
-        else
-        {
-          ent->pathid = -1;
-        }
-      }
-      else if( !Q_stricmp( cmd, "clear" ) )
-      {
-        if(numnearby <= 0)
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
-          return;
-        }
-        level.paths[nearbynodeid[0]].nextid[0] = 1000 + MAX_PATHS;
-        level.paths[nearbynodeid[0]].nextid[1] = 1000 + MAX_PATHS;
-        level.paths[nearbynodeid[0]].nextid[2] = 1000 + MAX_PATHS;
-        level.paths[nearbynodeid[0]].nextid[3] = 1000 + MAX_PATHS;
-        level.paths[nearbynodeid[0]].nextid[4] = 1000 + MAX_PATHS;
-        level.paths[nearbynodeid[0]].random = 0;
-        level.paths[nearbynodeid[0]].timeout = 0;
-        level.paths[nearbynodeid[0]].action = 0;
-        trap_SendServerCommand( ent-g_entities, va( "print \"Cleared Node #%d.\n\"", nearbynodeid[0] ) );
-        return;
-      }
-      else if( !Q_stricmp( cmd, "move" ) )
-      {
-        ent->discpathid = -1;
-        ent->pathid = -1;
-        if( ent->movepathid < 0 || ent->movepathid >= level.numPaths )
-        {
-          ent->movepathid = nearbynodeid[0];
-          trap_SendServerCommand( ent-g_entities, va("print \"Node #%d Selected.\n\"", nearbynodeid[0] ) );
-          return;
-        }
-        else if(ent->movepathid >= 0 && ent->movepathid < level.numPaths)
-        {
-          if( nearbynodeid[0] == ent->movepathid )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
-            ent->movepathid = -1;
-            return;
-          }
-          if( numnearby > 0 )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Too close to another node.\n\"");
-            return;
-          }
-          level.paths[ent->movepathid].coord[0] = ent->s.pos.trBase[0];
-          level.paths[ent->movepathid].coord[1] = ent->s.pos.trBase[1];
-          level.paths[ent->movepathid].coord[2] = ent->s.pos.trBase[2];
-          trap_SendServerCommand( ent-g_entities, va( "print \"Moved node #%d to this location.\n\"", ent->movepathid ) );
-          ent->movepathid = -1;
-        }
-        else{ent->movepathid = -1;}
-        return;
-      }
-      else if( !Q_stricmp( cmd, "delete" ) )
-      {
-        ent->movepathid = -1;
-        ent->pathid = -1;
-        ent->discpathid = -1;
-        if( numnearby <= 0 )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
-          return;
-        }
-        for( i = 0; i < level.numPaths; i++ )
-        {
-          for( i2 = 0; i2 < 5; i2++ )
-          {
-            if( level.paths[i].nextid[i2] == nearbynodeid[0] )
-            {
-              level.paths[i].nextid[i2] = 1000 + MAX_PATHS;
-            }
-          }
-        }
-        level.paths[nearbynodeid[0]].nextid[0] = -1;
-        level.paths[nearbynodeid[0]].nextid[1] = -1;
-        level.paths[nearbynodeid[0]].nextid[2] = -1;
-        level.paths[nearbynodeid[0]].nextid[3] = -1;
-        level.paths[nearbynodeid[0]].nextid[4] = -1;
-        trap_SendServerCommand( ent-g_entities, va("print \"Deleted Node #%d. It remains disabled until written over.  Links to other paths removed.\n\"", nearbynodeid[0]));
-      }
-      else if( !Q_stricmp( cmd, "disconnect" ) )
-      {
-        ent->movepathid = -1;
-        ent->pathid = -1;
-        if( numnearby <= 0 )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
-          return;
-        }
-        if( ent->discpathid < 0 || ent->discpathid >= level.numPaths )
-        {
-          ent->discpathid = nearbynodeid[0];
-          trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d Selected.\n\"", nearbynodeid[0] ) );
-          return;
-        }
-        else if( ent->discpathid >= 0 && ent->discpathid < level.numPaths )
-        {
-          if( nearbynodeid[0] == ent->discpathid )
-          {
-            trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
-            ent->discpathid = -1;
-            return;
-          }
-          for( i = 0; i < 5; i++ )
-          {
-            if( level.paths[nearbynodeid[0]].nextid[i] == ent->discpathid )
-            {
-              level.paths[nearbynodeid[0]].nextid[i] = 1000 + MAX_PATHS;
-            }
-            if( level.paths[ent->discpathid].nextid[i] == nearbynodeid[0] )
-            {
-              level.paths[ent->discpathid].nextid[i] = 1000 + MAX_PATHS;
-            }
-          }
-          trap_SendServerCommand( ent-g_entities, va( "print \"#%d <-X-> #%d \n\"", nearbynodeid[0], ent->discpathid ) );
-          ent->discpathid = -1;
-        }
-        return;
-      }
-      else if( !Q_stricmp( cmd, "cancel" ) )
-      {
-        ent->pathid = -1;
-        ent->movepathid = -1;
-        ent->discpathid = -1;
-        trap_SendServerCommand( ent-g_entities, "print \"[Connect/Move/Disconnect] selected nodes are deselected.\n\"" );
-      }
-      else if( !Q_stricmp( cmd, "random" ) )
-      {
-        if( numnearby <= 0 )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
-          return;
-        }
-        if( level.paths[nearbynodeid[0]].random <= 0 )
-        {
-          level.paths[nearbynodeid[0]].random = 1;
-          trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is set random.\n\"", nearbynodeid[0] ) );
-          return;
-        }
-        else if( level.paths[nearbynodeid[0]].random > 0 )
-        {
-          level.paths[nearbynodeid[0]].random = 0;
-          trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is set consecutive.\n\"", nearbynodeid[0] ) );
-          return;
-        }
-        return;
-      }
-      else if( !Q_stricmp( cmd, "save" ) )
-      {
-        delpath = qfalse;
-        Com_sprintf( fileName, sizeof( fileName ), "paths/%s/path.dat", map );
+	if( g_pathediting.integer <= 0 )
+	{
+		trap_SendServerCommand( ent-g_entities, "print \"g_pathediting is off.\n\"");
+		return;
+	}
+	
+	if( !g_pathpassword.string[0] )
+	{
+		trap_SendServerCommand( ent-g_entities, "print \"Password not set (g_pathpassword).\n\"");
+		return;
+	}
+	
+	if( !ent->pathEditor )
+	{
+		trap_SendServerCommand( ent-g_entities, "print \"Wrong password (!password).\n\"");
+		return;
+	}
+	
+	trap_Cvar_VariableStringBuffer( "mapname", map, sizeof( map ) );
+	for( i = 0; i < level.numPaths; i++ )
+	{
+		Ax = level.paths[i].coord[0];
+		Ay = level.paths[i].coord[1];
+		Az = level.paths[i].coord[2];
+		Bx = ent->s.pos.trBase[0];
+		By = ent->s.pos.trBase[1];
+		Bz = ent->s.pos.trBase[2];
+		deleted = qfalse;
+		
+		for( j = 0; j < MAX_PATH_NEIGHBOURS; j++ )
+		{
+			if( level.paths[i].neighbourID[j] < 0 )
+			{
+				deleted = qtrue;
+			}
+		}
+		
+		if( deleted == qtrue )
+		{
+			deleted = qfalse;
+			continue;
+		}
+		
+		distance = sqrt( ( Ax - Bx ) * ( Ax - Bx ) + ( Ay - By ) * ( Ay - By ) + ( Az - Bz ) * ( Az - Bz ) );
+		if( distance < 75 )
+		{
+		  nearbyNodeID[numnearby] = i;
+		  numnearby++;
+		  continue;
+		}
+	}
+	
+	if( G_SayArgc() != 2 && G_SayArgc() != 3 )
+	{
+		trap_SendServerCommand( ent - g_entities, "print \"Usage: node [add|connect|disconnect|random|move|cancel|timeout|action|clear|delete|save]\n\"" );
+		
+		for( i = 0; i < numnearby; i++ )
+		{
+			trap_SendServerCommand( ent - g_entities, va( "print \"^5Nearby Node: %d ^2(X:%f Y:%f Z:%f) \"",
+				nearbyNodeID[i],
+				level.paths[nearbyNodeID[i]].coord[0],
+				level.paths[nearbyNodeID[i]].coord[1],
+				level.paths[nearbyNodeID[i]].coord[2] ) );
+				
+			for( j = 0; j < MAX_PATH_NEIGHBOURS; j++ )
+			{
+				if( level.paths[nearbyNodeID[i]].neighbourID[j] >= 0 )
+				{
+					trap_SendServerCommand( ent - g_entities, va( "print \"^1%d \"", level.paths[nearbyNodeID[i]].neighbourID[j] ) );
+				}
+			}
+			
+			trap_SendServerCommand( ent - g_entities, va( "print \"^3Random:^7%d ^3Timeout:^7%d ^3Action:^7%d\n\"",
+				level.paths[nearbyNodeID[i]].random,
+				level.paths[nearbyNodeID[i]].timeout,
+				level.paths[nearbyNodeID[i]].action ) );
+		}
+		
+		return;
+	}
+	
+	if( G_SayArgc() == 2 || G_SayArgc() == 3 )
+	{
+		trap_Argv( 1, cmd, sizeof( cmd ) );
+		if( numnearby > 1 && Q_stricmp( cmd, "cancel" ) && Q_stricmp( cmd, "save" ) )
+		{
+			trap_SendServerCommand( ent-g_entities, "print \"Too many nodes nearby.\n\"");
+			return;
+		}
+		
+		if( G_SayArgc( ) == 3 && !Q_stricmp( cmd, "timeout" ) )
+		{
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
+				return;
+			}
+			
+			trap_Argv( 2, timeout, sizeof( timeout ) );
+			timeout2 = atoi(timeout);
+			if( timeout2 < 0 )
+			{
+				timeout2 = 500;
+			}
+			else if( timeout2 > 100000 )
+			{
+				timeout2 = 100000;
+			}
+			
+			level.paths[nearbyNodeID[0]].timeout = timeout2;
+			trap_SendServerCommand( ent-g_entities, va("print \"Node timeout set to %d ms.\n\"", timeout2 ) );
+			return;
+		}
+		else if( G_SayArgc( ) == 3 && !Q_stricmp( cmd, "action" ) )
+		{
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"");
+				return;
+			}
+			
+			trap_Argv( 2, action, sizeof( action ) );
+			if( !Q_stricmp( action, "jump" ) )
+			{
+				level.paths[nearbyNodeID[0]].action = BOT_JUMP;
+			}
+			else if( !Q_stricmp( action, "wallclimb" ) )
+			{
+				level.paths[nearbyNodeID[0]].action = BOT_WALLCLIMB;
+			}
+			else if( !Q_stricmp( action, "pounce" ) )
+			{
+				level.paths[nearbyNodeID[0]].action = BOT_POUNCE;
+			}
+			else if( !Q_stricmp( action, "none" ) )
+			{
+				level.paths[nearbyNodeID[0]].action = 0;
+			}
+			else
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"Unknown action (jump, wallclimb, pounce, none)\n\"");
+				return;
+			}
+		  
+			trap_SendServerCommand( ent-g_entities, "print \"Node action set.\n\"");
+			return;	
+		}
+		else if( !Q_stricmp( cmd, "add" ) )
+		{
+			if( numnearby > 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"Too close to another node.\n\"");
+				return;
+			}
+			
+			if( level.numPaths >= MAX_PATHS )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"Reached Max amount of nodes.\n\"" );
+				return;
+			}
+			
+			for( i = 0; i < level.numPaths; i++ )
+			{
+				for( j = 0; j < MAX_PATH_NEIGHBOURS; j++ )
+				{
+					if( level.paths[i].neighbourID[j] < 0 )
+					{
+						pathfound = qtrue;
+						break;
+					}
+				}
+			}
+			
+			if( pathfound == qtrue )
+			{
+				level.paths[i].coord[0] = ent->s.pos.trBase[0];
+				level.paths[i].coord[1] = ent->s.pos.trBase[1];
+				level.paths[i].coord[2] = ent->s.pos.trBase[2];
+				level.paths[i].neighbourID[0] = 1000 + MAX_PATHS;
+				level.paths[i].neighbourID[1] = 1000 + MAX_PATHS;
+				level.paths[i].neighbourID[2] = 1000 + MAX_PATHS;
+				level.paths[i].neighbourID[3] = 1000 + MAX_PATHS;
+				level.paths[i].neighbourID[4] = 1000 + MAX_PATHS;
+				level.paths[i].random = 0;
+				level.paths[i].timeout = 10000;
+				level.paths[i].action = 0;
+				
+				trap_SendServerCommand( ent-g_entities, va( "print \"Saved Node #%d.\n\"", i ) );
+				
+				if( level.drawpath == qtrue )
+				{
+					node = spawnnode( ent, i );
+				}
+			}
+			else
+			{
+				level.paths[level.numPaths].coord[0] = ent->s.pos.trBase[0];
+				level.paths[level.numPaths].coord[1] = ent->s.pos.trBase[1];
+				level.paths[level.numPaths].coord[2] = ent->s.pos.trBase[2];
+				level.paths[level.numPaths].neighbourID[0] = 1000 + MAX_PATHS;
+				level.paths[level.numPaths].neighbourID[1] = 1000 + MAX_PATHS;
+				level.paths[level.numPaths].neighbourID[2] = 1000 + MAX_PATHS;
+				level.paths[level.numPaths].neighbourID[3] = 1000 + MAX_PATHS;
+				level.paths[level.numPaths].neighbourID[4] = 1000 + MAX_PATHS;
+				level.paths[level.numPaths].random = 0;
+				level.paths[level.numPaths].timeout = 10000;
+				level.paths[level.numPaths].action = 0;
+				
+				trap_SendServerCommand( ent-g_entities, va("print \"Saved Node #%d.\n\"", level.numPaths ) );
+				
+				if( level.drawpath == qtrue )
+				{
+					node = spawnnode( ent, level.numPaths );
+				}
+				
+				level.numPaths++;
+			}
+		}
+		else if( !Q_stricmp( cmd, "connect" ) )
+		{
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"");
+				return;
+			}
+			
+			ent->discpathid = -1;
+			ent->movepathid = -1;
+			if( ent->pathid < 0 || ent->pathid >= level.numPaths )
+			{
+				ent->pathid = nearbyNodeID[0];
+				trap_SendServerCommand( ent-g_entities, va("print \"Node #%d selected. Now select another node to connect to.\n\"", nearbyNodeID[0] ) );
+				return;
+			}
+			else if( ent->pathid > -1 && ent->pathid < level.numPaths )
+			{
+				linked = qfalse;
+				linked2 = qfalse;
+				pathfound = qfalse;
+				if( nearbyNodeID[0] == ent->pathid )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
+					ent->pathid = 1000 + MAX_PATHS;
+					return;
+				}
+				
+				for( i = 0; i < MAX_PATH_NEIGHBOURS; i++ )
+				{
+					if( level.paths[nearbyNodeID[0]].neighbourID[i] < level.numPaths )
+					{
+						countz++;
+					}
+					
+					if( level.paths[ent->pathid].neighbourID[i] < level.numPaths )
+					{
+						countz2++;
+					}
+					
+					if( level.paths[nearbyNodeID[0]].neighbourID[i] == ent->pathid )
+					{
+						linked = qtrue;
+					}
+					
+					if( level.paths[ent->pathid].neighbourID[i] == nearbyNodeID[0] )
+					{
+						linked2 = qtrue;
+					}
+				}
+				
+				if( countz >= 5 )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"This node is full.\n\"" );
+					return;
+				}
+				
+				if( countz2 >= 5 )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Selected node is full.\n\"" );
+					ent->pathid = -1;
+					return;
+				}
+				
+				if( linked == qtrue && linked2 == qtrue )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Both nodes are already linked.\n\"");
+					ent->pathid = -1;
+					return;
+				}
+				
+				countz = 0;
+				for( i = 0; i < MAX_PATH_NEIGHBOURS; i++ )
+				{
+					if( level.paths[nearbyNodeID[0]].neighbourID[i] >= MAX_PATHS )
+					{
+						countz = i;
+						break;	
+					}
+				}
+				
+				countz2 = 0;
+				for( i = 0; i < MAX_PATH_NEIGHBOURS; i++ )
+				{
+					if( level.paths[ent->pathid].neighbourID[i] >= MAX_PATHS )
+					{
+						countz2 = i;
+						break;
+					}
+				}
+				
+				if( linked == qtrue )
+				{
+					trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is already linked to selected. Linking selected to this node.\n\"", nearbyNodeID[0] ) );
+					level.paths[ent->pathid].neighbourID[countz2] = nearbyNodeID[0];
+					trap_SendServerCommand( ent-g_entities, va( "print \"#%d ----> #%d \n\"", ent->pathid, nearbyNodeID[0] ) );
+					ent->pathid = -1;
+					return;
+				}
+				
+				if( linked2 == qtrue )
+				{
+					trap_SendServerCommand( ent-g_entities, va( "print \"Selected node #%d is already linked to this. Linking this to selected node.\n\"", ent->pathid ) );
+					level.paths[nearbyNodeID[0]].neighbourID[countz] = ent->pathid;
+					trap_SendServerCommand( ent-g_entities, va( "print \"#%d ----> #%d \n\"", nearbyNodeID[0], ent->pathid ) );
+					ent->pathid = -1;
+					return;
+				}
+				
+				if( linked == qfalse && linked2 == qfalse )
+				{
+					level.paths[ent->pathid].neighbourID[countz2] = nearbyNodeID[0];
+					level.paths[nearbyNodeID[0]].neighbourID[countz] = ent->pathid;
+					trap_SendServerCommand( ent-g_entities, va( "print \"#%d <---> #%d \n\"", nearbyNodeID[0], ent->pathid ) );
+					ent->pathid = -1;
+					return;
+				}
+			}
+			else
+			{
+				ent->pathid = -1;
+			}
+		}
+		else if( !Q_stricmp( cmd, "clear" ) )
+		{
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
+				return;
+			}
+			
+			level.paths[nearbyNodeID[0]].neighbourID[0] = 1000 + MAX_PATHS;
+			level.paths[nearbyNodeID[0]].neighbourID[1] = 1000 + MAX_PATHS;
+			level.paths[nearbyNodeID[0]].neighbourID[2] = 1000 + MAX_PATHS;
+			level.paths[nearbyNodeID[0]].neighbourID[3] = 1000 + MAX_PATHS;
+			level.paths[nearbyNodeID[0]].neighbourID[4] = 1000 + MAX_PATHS;
+			level.paths[nearbyNodeID[0]].random = 0;
+			level.paths[nearbyNodeID[0]].timeout = 0;
+			level.paths[nearbyNodeID[0]].action = 0;
+			
+			trap_SendServerCommand( ent-g_entities, va( "print \"Cleared Node #%d.\n\"", nearbyNodeID[0] ) );
+			
+			return;
+		}
+		else if( !Q_stricmp( cmd, "move" ) )
+		{
+			ent->discpathid = -1;
+			ent->pathid = -1;
+			if( ent->movepathid < 0 || ent->movepathid >= level.numPaths )
+			{
+				ent->movepathid = nearbyNodeID[0];
+				trap_SendServerCommand( ent-g_entities, va("print \"Node #%d Selected.\n\"", nearbyNodeID[0] ) );
+				return;
+			}
+			else if( ent->movepathid >= 0 && ent->movepathid < level.numPaths )
+			{
+				if( nearbyNodeID[0] == ent->movepathid )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
+					ent->movepathid = -1;
+					return;
+				}
+				
+				if( numnearby > 0 )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Too close to another node.\n\"");
+					return;
+				}
+				
+				level.paths[ent->movepathid].coord[0] = ent->s.pos.trBase[0];
+				level.paths[ent->movepathid].coord[1] = ent->s.pos.trBase[1];
+				level.paths[ent->movepathid].coord[2] = ent->s.pos.trBase[2];
+				
+				trap_SendServerCommand( ent-g_entities, va( "print \"Moved node #%d to this location.\n\"", ent->movepathid ) );
+				
+				ent->movepathid = -1;
+			}
+			else
+			{
+				ent->movepathid = -1;
+			}
+			
+			return;
+		}
+		else if( !Q_stricmp( cmd, "delete" ) )
+		{
+			ent->movepathid = -1;
+			ent->pathid = -1;
+			ent->discpathid = -1;
+			
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
+				return;
+			}
 
-        len = trap_FS_FOpenFile( fileName, &f, FS_WRITE );
-        if( len < 0 )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"Couldn't Open File.  Created a New file.\n\"" );
-        }
-        for( i = 0; i < level.numPaths; i++ )
-        {
-          for( i2 = 0; i2 < 5; i2++ )
-          {
-            if( level.paths[i].nextid[i2] < 0 )
-            {
-              delpath = qtrue;
-            }
-          }
-          if( delpath == qtrue )
-          {
-            delpath = qfalse;
-            continue;
-          }
-          s = va( "%d %f %f %f %d %d %d %d %d %d %d %d\n",
-            i,
-            level.paths[i].coord[0],
-            level.paths[i].coord[1],
-            level.paths[i].coord[2],
-            level.paths[i].nextid[0],
-            level.paths[i].nextid[1],
-            level.paths[i].nextid[2],
-            level.paths[i].nextid[3],
-            level.paths[i].nextid[4],
-            level.paths[i].random,
-            level.paths[i].timeout,
-            level.paths[i].action);
-            trap_FS_Write( s, strlen( s ), f );
-        }
-        trap_FS_FCloseFile( f );
-        trap_SendServerCommand( -1, "print \"Saved Path.\n\"" );
-        return;
-      }
-      else
-      {
-        trap_SendServerCommand( ent-g_entities, "print \"Usage: node [add|connect|disconnect|random|move|cancel|timeout|action|clear|delete|save]\n\"" );
-        trap_SendServerCommand( ent-g_entities, "print \"Unknown option\n\"" );
-        return;
-      }
-    }
-    return;
+			for( i = 0; i < level.numPaths; i++ )
+			{
+				for( j = 0; j < MAX_PATH_NEIGHBOURS; j++ )
+				{
+					if( level.paths[i].neighbourID[j] == nearbyNodeID[0] )
+					{
+						level.paths[i].neighbourID[j] = 1000 + MAX_PATHS;
+					}
+				}
+			}
+			
+			level.paths[nearbyNodeID[0]].neighbourID[0] = -1;
+			level.paths[nearbyNodeID[0]].neighbourID[1] = -1;
+			level.paths[nearbyNodeID[0]].neighbourID[2] = -1;
+			level.paths[nearbyNodeID[0]].neighbourID[3] = -1;
+			level.paths[nearbyNodeID[0]].neighbourID[4] = -1;
+			
+			trap_SendServerCommand( ent-g_entities, va("print \"Deleted Node #%d. It remains disabled until written over.  Links to other paths removed.\n\"", nearbyNodeID[0]));
+		}
+		else if( !Q_stricmp( cmd, "disconnect" ) )
+		{
+			ent->movepathid = -1;
+			ent->pathid = -1;
+			
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
+				return;
+			}
+			
+			if( ent->discpathid < 0 || ent->discpathid >= level.numPaths )
+			{
+				ent->discpathid = nearbyNodeID[0];
+				trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d Selected.\n\"", nearbyNodeID[0] ) );
+				return;
+			}
+			else if( ent->discpathid >= 0 && ent->discpathid < level.numPaths )
+			{
+				if( nearbyNodeID[0] == ent->discpathid )
+				{
+					trap_SendServerCommand( ent-g_entities, "print \"Node deselected.\n\"" );
+					ent->discpathid = -1;
+					return;
+				}
+				
+				for( i = 0; i < MAX_PATH_NEIGHBOURS; i++ )
+				{
+					if( level.paths[nearbyNodeID[0]].neighbourID[i] == ent->discpathid )
+					{
+						level.paths[nearbyNodeID[0]].neighbourID[i] = 1000 + MAX_PATHS;
+					}
+					
+					if( level.paths[ent->discpathid].neighbourID[i] == nearbyNodeID[0] )
+					{
+						level.paths[ent->discpathid].neighbourID[i] = 1000 + MAX_PATHS;
+					}
+				}
+				
+				trap_SendServerCommand( ent-g_entities, va( "print \"#%d <-X-> #%d \n\"", nearbyNodeID[0], ent->discpathid ) );
+				ent->discpathid = -1;
+			}
+			
+			return;
+		}
+		else if( !Q_stricmp( cmd, "cancel" ) )
+		{
+			ent->pathid = -1;
+			ent->movepathid = -1;
+			ent->discpathid = -1;
+			trap_SendServerCommand( ent-g_entities, "print \"[Connect/Move/Disconnect] selected nodes are deselected.\n\"" );
+		}
+		else if( !Q_stricmp( cmd, "random" ) )
+		{
+			if( numnearby <= 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"No nearby nodes.\n\"" );
+				return;
+			}
+			
+			if( level.paths[nearbyNodeID[0]].random <= 0 )
+			{
+				level.paths[nearbyNodeID[0]].random = 1;
+				trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is set random.\n\"", nearbyNodeID[0] ) );
+				return;
+			}
+			else
+			{
+				level.paths[nearbyNodeID[0]].random = 0;
+				trap_SendServerCommand( ent-g_entities, va( "print \"Node #%d is set consecutive.\n\"", nearbyNodeID[0] ) );
+				return;
+			}
+			return;
+		}
+		else if( !Q_stricmp( cmd, "save" ) )
+		{
+			delpath = qfalse;
+			Com_sprintf( fileName, sizeof( fileName ), "paths/%s/path.dat", map );
+
+			len = trap_FS_FOpenFile( fileName, &f, FS_WRITE );
+			if( len < 0 )
+			{
+				trap_SendServerCommand( ent-g_entities, "print \"Couldn't Open File.  Created a New file.\n\"" );
+			}
+			
+			for( i = 0; i < level.numPaths; i++ )
+			{
+				for( j = 0; j < 5; j++ )
+				{
+					if( level.paths[i].neighbourID[j] < 0 )
+					{
+						delpath = qtrue;
+					}
+				}
+				
+				if( delpath == qtrue )
+				{
+					delpath = qfalse;
+					continue;
+				}
+				
+				s = va( "%d %f %f %f %d %d %d %d %d %d %d %d\n",
+				i,
+				level.paths[i].coord[0],
+				level.paths[i].coord[1],
+				level.paths[i].coord[2],
+				level.paths[i].neighbourID[0],
+				level.paths[i].neighbourID[1],
+				level.paths[i].neighbourID[2],
+				level.paths[i].neighbourID[3],
+				level.paths[i].neighbourID[4],
+				level.paths[i].random,
+				level.paths[i].timeout,
+				level.paths[i].action);
+				trap_FS_Write( s, strlen( s ), f );
+			}
+			
+			trap_FS_FCloseFile( f );
+			trap_SendServerCommand( -1, "print \"Saved Path.\n\"" );
+			
+			return;
+		}
+		else
+		{
+			trap_SendServerCommand( ent-g_entities, "print \"Usage: node [add|connect|disconnect|random|move|cancel|timeout|action|clear|delete|save]\n\"" );
+			trap_SendServerCommand( ent-g_entities, "print \"Unknown option\n\"" );
+			
+			return;
+		}
+	}
+	return;
 }
+
 /*
 =================
 Cmd_TeamStatus_f

@@ -236,7 +236,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       }
       else if( attacker->client->pers.teamSelection == PTE_HUMANS )
       {
-        if ( g_ambush.integer > 0 && ROTACAK_ambush_rebuild_time_temp < level.time )
+        if( ROTACAK_ambush_rebuild_time_temp < level.time )
         {
           ROTACAK_ambush_kills++;
           g_humanKills.integer++;
@@ -1007,7 +1007,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
   if( !targ->takedamage )
     return;
-  if(targ->patheditor == qtrue)
+  if(targ->pathEditor == qtrue)
 	return;
   if( level.time - targ->spawnprotection < g_bot_spawnprotection.integer ){return;}
   // the intermission has allready been qualified for, so don't
@@ -1015,10 +1015,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   if( level.intermissionQueued )
     return;
 
-  if( g_ambush.integer > 0 && g_ambush_abuild_dmg.integer <= 0 &&
+  if( g_ambush_abuild_dmg.integer <= 0 &&
       !targ->client && targ->biteam == BIT_ALIENS && mod != MOD_TARGET_LASER)
       return;
-  else if (g_ambush.integer > 0 && g_ambush_hbuild_dmg.integer <= 0 &&
+  else if ( g_ambush_hbuild_dmg.integer <= 0 &&
       !targ->client && targ->biteam == BIT_HUMANS && mod != MOD_TARGET_LASER)//nejdou znicit spawny
       return;
 
@@ -1037,21 +1037,23 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
     return;
   }
-  if(attacker->client)
-  {
-    if(g_ambush.integer > 0 && attacker->client->pers.teamSelection == PTE_HUMANS)
-      damage += damage / 4;
-  }
-  else
-  {
-    if(g_ambush.integer > 0 && 
-	  (mod == MOD_TESLAGEN || 
-	  mod == MOD_MGTURRET || 
-	  mod == MOD_REACTOR))
-    {
-  	  damage += damage / 2;
-    }
-  }
+  
+	if( attacker->client )
+	{
+		if( attacker->client->pers.teamSelection == PTE_HUMANS )
+		{
+			damage *= 1.25;
+		}
+	}
+	else
+	{
+		if( mod == MOD_TESLAGEN
+			|| mod == MOD_MGTURRET
+			|| mod == MOD_REACTOR )
+		{
+			damage *= 1.5;
+		}
+	}
 
   client = targ->client;
 

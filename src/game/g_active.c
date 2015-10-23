@@ -840,24 +840,25 @@ void ClientTimerActions( gentity_t *ent, int msec )
       }
     }
   }
-  while ( client->bottime >= 300 )
-  {
-    if( ent->r.svFlags & SVF_BOT )
-    {
-      if(g_bot.integer > 0)
-      {
-        G_BotThink( ent );
-      }
-      else
-      {
-        ent->client->pers.cmd.buttons = 0;
-        ent->client->pers.cmd.forwardmove = 0;
-        ent->client->pers.cmd.upmove = 0;
-        ent->client->pers.cmd.rightmove = 0;
-      }
-    }
-    client->bottime -= 300;
-  }
+	while( client->bottime >= 300 )
+	{
+		if( ent->r.svFlags & SVF_BOT )
+		{
+			if( g_bot.integer > 0 )
+			{
+				G_BotThink( ent );
+			}
+			else
+			{
+				ent->client->pers.cmd.buttons = 0;
+				ent->client->pers.cmd.forwardmove = 0;
+				ent->client->pers.cmd.upmove = 0;
+				ent->client->pers.cmd.rightmove = 0;
+			}
+		}
+		
+		client->bottime -= 300;
+	}
   while( client->time1000 >= 1000 )
   {
     client->time1000 -= 1000;
@@ -926,21 +927,27 @@ void ClientTimerActions( gentity_t *ent, int msec )
     }
     if( client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && level.surrenderTeam != PTE_HUMANS )
     {
-      if( ent->client->pers.regen && 
-          ent->health > 0 && 
-          ent->health < client->ps.stats[ STAT_MAX_HEALTH ] &&
-        ( ent->lastDamageTime + ALIEN_REGEN_DAMAGE_TIME ) < level.time )
-          ent->health += BG_FindRegenRateForClass( client->ps.stats[ STAT_PCLASS ] );
-    
-    
-      if( ent->client->pers.doubleregen && 
-          ent->health > 0 && 
-          ent->health < client->ps.stats[ STAT_MAX_HEALTH ] &&
-        ( ent->lastDamageTime + ALIEN_REGEN_DAMAGE_TIME ) < level.time )
-          ent->health += BG_FindRegenRateForClass( client->ps.stats[ STAT_PCLASS ] ) * 2;
+		if( ent->client->pers.regen && 
+			ent->health > 0 && 
+			ent->health < client->ps.stats[ STAT_MAX_HEALTH ] &&
+			( ent->lastDamageTime + ALIEN_REGEN_DAMAGE_TIME ) < level.time )
+		{
+			int regenRate = BG_FindRegenRateForClass( client->ps.stats[STAT_PCLASS] );
+			
+			if( ent->client->pers.doubleregen )
+			{
+				ent->health += regenRate * 2;
+			}
+			else
+			{
+				ent->health += regenRate;
+			}
+		}
       
-      if( ent->health > client->ps.stats[ STAT_MAX_HEALTH ] )
+		if( ent->health > client->ps.stats[ STAT_MAX_HEALTH ] )
+		{
 			ent->health = client->ps.stats[ STAT_MAX_HEALTH ];
+		}
     }
 
     if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
@@ -1604,16 +1611,6 @@ void ClientThink_real( gentity_t *ent )
     gentity_t *bub;
     bub = G_TempEntity( client->ps.origin, EV_PLAYER_TELEPORT_OUT );
     client->pers.bubbletime += 500;
-  }
-  
-  if( client->pers.grabbed )
-  {
-    vec3_t clear;
-    clear[0] = 0;
-    clear[1] = 0;
-    clear[2] = 0;
-    VectorCopy( clear, ent->client->ps.velocity );
-    VectorCopy( ent->client->pers.grabber->s.origin, ent->client->ps.origin );
   }
 
   if( BG_InventoryContainsUpgrade( UP_MEDKIT, client->ps.stats ) &&

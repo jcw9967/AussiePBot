@@ -43,8 +43,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_ADMIN_CMD_LEN 20
 #define MAX_ADMIN_BAN_REASON 50
 
-#define MAX_ADMIN_BANSUSPEND_DAYS 14
-
 #define CHAT_MAXCHAN 10
 #define CHAT_MAXPASS 12
 
@@ -132,7 +130,6 @@ typedef struct g_admin_ban
   char reason[ MAX_ADMIN_BAN_REASON ];
   char made[ 18 ]; // big enough for strftime() %c
   int expires;
-  int suspend;
   char banner[ MAX_NAME_LENGTH ];
 }
 g_admin_ban_t;
@@ -194,7 +191,6 @@ qboolean G_admin_listlayouts( gentity_t *ent, int skiparg );
 qboolean G_admin_listplayers( gentity_t *ent, int skiparg );
 qboolean G_admin_map( gentity_t *ent, int skiparg );
 qboolean G_admin_mute( gentity_t *ent, int skiparg );
-qboolean G_admin_denybuild( gentity_t *ent, int skiparg );
 qboolean G_admin_showbans( gentity_t *ent, int skiparg );
 qboolean G_admin_help( gentity_t *ent, int skiparg );
 qboolean G_admin_admintest( gentity_t *ent, int skiparg );
@@ -210,7 +206,6 @@ qboolean G_admin_lock( gentity_t *ent, int skiparg );
 qboolean G_admin_unlock( gentity_t *ent, int skiparg );
 qboolean G_admin_seen(gentity_t *ent, int skiparg );
 void     G_admin_seen_update( char *guid );
-qboolean G_admin_suspendban( gentity_t *ent, int skiparg );
 qboolean G_admin_adminlog( gentity_t *ent, int skiparg );
 void     G_admin_adminlog_cleanup( void );
 void     G_admin_adminlog_log( gentity_t *ent, char *command, char *args, int skiparg, qboolean success );
@@ -221,21 +216,13 @@ qboolean G_admin_devmap( gentity_t *ent, int skiparg );
 void     G_admin_maplog_update( void );
 qboolean G_admin_maplog( gentity_t *ent, int skiparg );
 qboolean G_admin_layoutsave( gentity_t *ent, int skiparg );
-qboolean G_admin_demo( gentity_t *ent, int skiparg );
 qboolean G_admin_denyweapon( gentity_t *ent, int skiparg );
-qboolean G_admin_forcespec( gentity_t *ent, int skiparg);
-qboolean G_admin_unforcespec( gentity_t *ent, int skiparg);
 qboolean G_admin_register( gentity_t *ent, int skiparg );
 qboolean G_admin_buildlog( gentity_t *ent, int skiparg );
-qboolean G_admin_revert( gentity_t *ent, int skiparg );
 qboolean G_admin_fireworks( gentity_t *ent, int skiparg );
-qboolean G_admin_grab( gentity_t *ent, int skiparg );
 qboolean G_admin_info( gentity_t *ent, int skiparg );
 qboolean G_admin_buildlog( gentity_t *ent, int skiparg );
-qboolean G_admin_revert( gentity_t *ent, int skiparg );
 qboolean G_admin_pause( gentity_t *ent, int skiparg );
-qboolean G_admin_L0( gentity_t *ent, int skiparg );
-qboolean G_admin_L1( gentity_t *ent, int skiparg );
 qboolean G_admin_putmespec( gentity_t *ent, int skiparg );
 qboolean G_admin_warn( gentity_t *ent, int skiparg );
 qboolean G_admin_designate( gentity_t *ent, int skiparg );
@@ -245,21 +232,12 @@ qboolean G_admin_immunity( gentity_t *ent, int skiparg );
 qboolean G_admin_cp( gentity_t *ent, int skiparg );
 qboolean G_admin_invisible( gentity_t *ent, int skiparg );
 qboolean G_admin_slap( gentity_t *ent, int skiparg );
-qboolean G_admin_drop( gentity_t *ent, int skiparg );
-qboolean G_admin_cvarset( gentity_t *ent, int skiparg );
 qboolean G_admin_credits( gentity_t *ent, int skiparg );
 qboolean G_password(gentity_t *ent, int skiparg );
 qboolean G_buy( gentity_t *ent, int skiparg );
 
-qboolean G_heal( gentity_t *ent, int skiparg );
-qboolean G_ammo( gentity_t *ent, int skiparg );
-qboolean G_doubledmg( gentity_t *ent, int skiparg );
-qboolean G_hyperspeed( gentity_t *ent, int skiparg );
-qboolean G_doubleammo( gentity_t *ent, int skiparg );
-
 qboolean G_admin_bot( gentity_t *ent, int skiparg );
-qboolean G_admin_botcmd( gentity_t *ent, int skiparg );
-qboolean G_drawnodes(gentity_t *ent, int skiparg);
+qboolean G_draw_nodes(gentity_t *ent, int skiparg);
 qboolean G_admin_stage(gentity_t *ent,int skiparg);
 qboolean G_admin_bubble(gentity_t *ent,int skiparg);
 
