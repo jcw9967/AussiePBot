@@ -696,7 +696,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 
 				self->think = AHive_ReturnToHive;
 				self->nextthink = level.time + FRAMETIME;
-				//;//trap_SendServerCommand( -1, va( "print \"Lost Target\n\""));
+				//;//AP(  va( "print \"Lost Target\n\""));
 				return;				// lost the track, get back home
 			}
 			else
@@ -704,7 +704,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 				if (self->TotalWP < MAX_WPA)
 				{
 					self->TotalWP++;
-					//;//trap_SendServerCommand( -1, va( "print \"New Waypoint, %i\n\"", self->TotalWP - 1));
+					//;//AP(  va( "print \"New Waypoint, %i\n\"", self->TotalWP - 1));
 					VectorCopy(self->target_ent->r.currentOrigin, self->WPA[ self->TotalWP ]);
 				}
 				else
@@ -713,7 +713,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 
 					self->think = AHive_ReturnToHive;
 					self->nextthink = level.time + FRAMETIME;
-					//;//trap_SendServerCommand( -1, va( "print \"Out Of memory\n\""));
+					//;//AP(  va( "print \"Out Of memory\n\""));
 					return;				// out of memory, get back home
 				}
 			}
@@ -728,7 +728,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 		if (self->TotalWP > 1)
 		{
 			self->TotalWP = 1;
-			//;//trap_SendServerCommand( -1, va( "print \"Direct Line of Sight\n\""));
+			//;//AP(  va( "print \"Direct Line of Sight\n\""));
 		}
 		VectorCopy(self->target_ent->r.currentOrigin, self->WPA[ 0 ]);
 		VectorCopy(self->target_ent->r.currentOrigin, self->WPA[ self->TotalWP ]);
@@ -747,7 +747,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 		self->TotalWP--;
 		if (self->TotalWP < 1) self->TotalWP = 1;
 		VectorCopy(self->target_ent->r.currentOrigin, self->WPA[ self->TotalWP ]);
-		//;//trap_SendServerCommand( -1, va( "print \"Waypoint Reached\n\""));
+		//;//AP(  va( "print \"Waypoint Reached\n\""));
 	}
 	
 	trap_Trace( &tr, self->r.currentOrigin, self->r.mins, self->r.maxs,
@@ -760,7 +760,7 @@ void AHive_SearchAndDestroy( gentity_t *self )
 
 		self->think = AHive_ReturnToHive;
 		self->nextthink = level.time + FRAMETIME;
-		//;//trap_SendServerCommand( -1, va( "print \"Invalid Waypoint\n\""));
+		//;//AP(  va( "print \"Invalid Waypoint\n\""));
 		return;
 	}
 	
@@ -815,7 +815,7 @@ gentity_t *fire_hive( gentity_t *self, vec3_t start, vec3_t dir )
 		bolt->TotalWP++;
 		VectorCopy(self->WPA[self->targWP], bolt->WPA[ 0 ]);
 		VectorCopy(self->WPA[self->targWP], bolt->WPA[ bolt->TotalWP ]);
-	    ;//trap_SendServerCommand( -1, va( "print \"Swarm : Waypoint Received, proceeding to target\n\""));	
+	    ;//AP(  va( "print \"Swarm : Waypoint Received, proceeding to target\n\""));	
 	}
 	else
 	{
@@ -825,7 +825,7 @@ gentity_t *fire_hive( gentity_t *self, vec3_t start, vec3_t dir )
 		VectorCopy(self->WPA[TW], bolt->WPA[ 0 ]);
 		VectorCopy(self->WPA2[TW], bolt->WPA[ 1 ]);
 		VectorCopy(self->WPA2[TW], bolt->WPA[ bolt->TotalWP ]);
-	    ;//trap_SendServerCommand( -1, va( "print \"Swarm : 2 Waypoints received, proceeding to target\n\""));		
+	    ;//AP(  va( "print \"Swarm : 2 Waypoints received, proceeding to target\n\""));		
 	}
   }
 

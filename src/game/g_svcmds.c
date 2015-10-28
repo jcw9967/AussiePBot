@@ -561,14 +561,14 @@ static void Svcmd_AdmitDefeat_f( void )
     level.surrenderTeam = PTE_ALIENS;
     G_BaseSelfDestruct( PTE_ALIENS );
     G_TeamCommand( PTE_ALIENS, "cp \"Hivemind Link Broken\" 1");
-    trap_SendServerCommand( -1, "print \"Alien team has admitted defeat\n\"" );
+    AP(  "print \"Alien team has admitted defeat\n\"" );
   }
   else if( team == PTE_HUMANS || teamNum[ 0 ] == 'h' )
   {
     level.surrenderTeam = PTE_HUMANS;
     G_BaseSelfDestruct( PTE_HUMANS );
     G_TeamCommand( PTE_HUMANS, "cp \"Life Support Terminated\" 1");
-    trap_SendServerCommand( -1, "print \"Human team has admitted defeat\n\"" );
+    AP(  "print \"Human team has admitted defeat\n\"" );
   }
   else
   {
@@ -696,7 +696,7 @@ qboolean  ConsoleCommand( void )
 
   if( !Q_stricmp( cmd, "evacuation" ) )
   {
-    trap_SendServerCommand( -1, "print \"Evacuation ordered\n\"" );
+    AP(  "print \"Evacuation ordered\n\"" );
     level.lastWin = PTE_NONE;
     trap_SetConfigstring( CS_WINNER, "Evacuation" );
     LogExit( "Evacuation." );
@@ -712,18 +712,18 @@ qboolean  ConsoleCommand( void )
   {
     if( Q_stricmp( cmd, "say" ) == 0 )
     {
-      trap_SendServerCommand( -1, va( "print \"server: %s\n\"", ConcatArgs( 1 ) ) );
+      AP(  va( "print \"server: %s\n\"", ConcatArgs( 1 ) ) );
       return qtrue;
     }
     else if( !Q_stricmp( cmd, "chat" ) )
     {
-      trap_SendServerCommand( -1, va( "chat \"%s\" -1 0", ConcatArgs( 1 ) ) );
+      AP(  va( "chat \"%s\" -1 0", ConcatArgs( 1 ) ) );
       G_Printf( "chat: %s\n", ConcatArgs( 1 ) );
       return qtrue;
     }
     else if( !Q_stricmp( cmd, "cp" ) )
     {
-      trap_SendServerCommand( -1, va( "cp \"%s\"", ConcatArgs( 1 ) ) );
+      AP(  va( "cp \"%s\"", ConcatArgs( 1 ) ) );
       G_Printf( "cp: %s\n", ConcatArgs( 1 ) );
       return qtrue;
     }

@@ -213,6 +213,7 @@ struct gentity_s
   int               noise_index;
 
   //for targeting following
+  int			nearestNodeIndex;
   gentity_t		*botEnemy;
   int			enemytime;
   int			botEnemyLastSeen;
@@ -832,6 +833,8 @@ typedef struct
   int               alienStage3Time;
   int               humanStage2Time;
   int               humanStage3Time;
+  
+  int				lastAmbushNextStageTime;
 
   qboolean          uncondAlienWin;
   qboolean          uncondHumanWin;
@@ -1543,19 +1546,20 @@ extern  vmCvar_t  g_welcomeMsg;
 extern  vmCvar_t  g_welcomeMsgTime;
 
 //ROTAX
-extern  vmCvar_t  g_ambush_killstonextstage;
+extern  vmCvar_t  g_ambush_killsToNextStage;
+extern  vmCvar_t  g_ambush_timeToNextStage;
 extern  vmCvar_t  g_ambush_dodge;
-extern  vmCvar_t  g_ambush_rebuild_time;
-extern  vmCvar_t  g_ambush_sec_to_start;
-extern  vmCvar_t  g_ambush_stage_suicide;
-extern  vmCvar_t  g_ambush_no_egg_ffoff;
+extern  vmCvar_t  g_ambush_rebuildTime;
+extern  vmCvar_t  g_ambush_secToStart;
+extern  vmCvar_t  g_ambush_stageSuicide;
+extern  vmCvar_t  g_ambush_noEggFFOff;
 extern  vmCvar_t  g_ambush_stage;
-extern  vmCvar_t  g_ambush_stage_limit;
-extern  vmCvar_t  g_ambush_kill_spawns;
+extern  vmCvar_t  g_ambush_stageLimit;
+extern  vmCvar_t  g_ambush_killSpawns;
 extern  vmCvar_t  g_ambush_attackBuildables;
 extern  vmCvar_t  g_ambush_range;
-extern  vmCvar_t  g_ambush_hbuild_dmg;
-extern  vmCvar_t  g_ambush_abuild_dmg;
+extern  vmCvar_t  g_ambush_hbuildDmg;
+extern  vmCvar_t  g_ambush_abuildDmg;
 
 extern  vmCvar_t  g_pathediting;
 extern  vmCvar_t  g_human_range;
@@ -1570,12 +1574,8 @@ extern  vmCvar_t  g_level3UPG_range;
 extern  vmCvar_t  g_level4_range;
 extern  vmCvar_t  g_bot;
 extern  vmCvar_t  g_bot_spawnprotection;
-extern  vmCvar_t  g_bot_evolve;
 extern  vmCvar_t  g_steepbuild;
 extern  vmCvar_t  g_nobuildtimer;
-
-extern  vmCvar_t  g_nade_range;
-extern  vmCvar_t  g_nade_damage;
 
 extern  vmCvar_t  g_pathpassword;
 extern  vmCvar_t  g_selfknockback;
