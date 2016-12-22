@@ -1136,7 +1136,7 @@ static void G_IntermissionMapVoteMessageReal( gentity_t *ent, int winner, int wi
     ( level.mapRotationVoteTime - level.time ) / 1000 );
   Q_strcat( string, sizeof( string ), entry );
 
-  trap_SendServerCommand( ent-g_entities, va( "cp \"%s\"\n", string ) );
+	CP( va( "cp \"%s\"\n", string ) );
 }
 
 void G_IntermissionMapVoteMessageAll( void )

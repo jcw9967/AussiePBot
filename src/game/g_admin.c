@@ -1200,7 +1200,7 @@ qboolean G_admin_cmd_check( gentity_t *ent, qboolean say )
 	if( g_floodMinTime.integer )
 		if( G_Flood_Limited( ent ) )
 		{
-			trap_SendServerCommand( ent - g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
+			CP( "print \"Your chat is flood-limited; wait before chatting again\n\"" );
 			return qtrue;
 		}
 
@@ -4711,7 +4711,7 @@ qboolean G_admin_listrotation( gentity_t *ent, int skiparg )
 	if( !G_MapRotationActive() ||
 		g_currentMapRotation.integer == NOT_ROTATING )
 	{
-		trap_SendServerCommand( ent - g_entities, "print \"^3!rotation: ^7There is no active map rotation on this server\n\"" );
+		CP( "print \"^3!rotation: ^7There is no active map rotation on this server\n\"" );
 		return qfalse;
 	}
 
@@ -4798,7 +4798,7 @@ qboolean G_admin_listrotation( gentity_t *ent, int skiparg )
 			// No maps were found in the active map rotation
 			if( mapRotations.rotations[i].numMaps < 1 )
 			{
-				trap_SendServerCommand( ent - g_entities, "print \"  - ^7Empty!\n\"" );
+				CP( "print \"  - ^7Empty!\n\"" );
 				return qfalse;
 			}
 		}
@@ -4983,7 +4983,7 @@ qboolean G_admin_putmespec( gentity_t *ent, int skiparg )
 		cs_offset = 0;
 	if( level.teamVoteTime[cs_offset] )
 	{
-		trap_SendServerCommand( ent - g_entities, "print \"Can not leave team during a team vote\n\"" );
+		CP( "print \"Can not leave team during a team vote\n\"" );
 		return qfalse;
 	}
 
@@ -7002,17 +7002,17 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	}
 	if( ent->client->pers.teamSelection != PTE_HUMANS && ent->client->pers.teamSelection != PTE_ALIENS )
 	{
-		trap_SendServerCommand( ent - g_entities, va( "print \"^1You must be on a team\n\"" ) );
+		CP( va( "print \"^1You must be on a team\n\"" ) );
 		return qfalse;
 	}
 	if( ent->client->pers.classSelection == PCL_NONE )
 	{
-		trap_SendServerCommand( ent - g_entities, va( "print \"^1You must be alive\n\"" ) );
+		CP( va( "print \"^1You must be alive\n\"" ) );
 		return qfalse;
 	}
 	if( ent->health <= 0 )
 	{
-		trap_SendServerCommand( ent - g_entities, va( "print \"^1You must be alive\n\"" ) );
+		CP( va( "print \"^1You must be alive\n\"" ) );
 	}
 
 	item[0] = '\0';
@@ -7023,7 +7023,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	{
 		if( ent->client->pers.doubledmg == 1 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You have Double Damage already\n\"" ) );
+			CP( va( "print \"^1You have Double Damage already\n\"" ) );
 			return qfalse;
 		}
 		if( ent->client->pers.credit >= DOUBLEDMG_COST )
@@ -7031,12 +7031,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -DOUBLEDMG_COST, qfalse );
 			ent->client->pers.doubledmg = 1;
 			ent->client->pers.saved = qtrue;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You received Double Damage!\n\"" ) );
+			CP( va( "print \"^5You received Double Damage!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEDMG_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEDMG_COST ) );
 			return qfalse;
 		}
 	}
@@ -7044,7 +7044,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	{
 		if( ent->client->pers.hyperspeed == 1 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You have Hyper Speed already\n\"" ) );
+			CP( va( "print \"^1You have Hyper Speed already\n\"" ) );
 			return qfalse;
 		}
 		if( ent->client->pers.credit >= HYPERSPEED_COST )
@@ -7052,12 +7052,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -HYPERSPEED_COST, qfalse );
 			ent->client->pers.hyperspeed = 1;
 			ent->client->pers.saved = qtrue;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You received Hyper Speed!\n\"" ) );
+			CP( va( "print \"^5You received Hyper Speed!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", HYPERSPEED_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", HYPERSPEED_COST ) );
 			return qfalse;
 		}
 	}
@@ -7068,7 +7068,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 
 		if( ent->client->pers.doubleammo == 1 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You have Double Ammo already\n\"" ) );
+			CP( va( "print \"^1You have Double Ammo already\n\"" ) );
 			return qfalse;
 		}
 		if( ent->client->pers.credit >= DOUBLEAMMO_COST )
@@ -7087,12 +7087,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			ent->client->ps.stats[STAT_STATE] |= SS_DOUBLEAMMO;
 			G_GiveClientMaxAmmo( ent, hasEnergyWeapon );
 			ClientUserinfoChanged( ent->client->ps.clientNum );
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You received Double Ammo!\n\"" ) );
+			CP( va( "print \"^5You received Double Ammo!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEAMMO_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEAMMO_COST ) );
 		}
 		return qfalse;
 	}
@@ -7103,12 +7103,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -1500, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 10;
 			ent->health = ent->health + 10;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 10HP\n\"" ) );
+			CP( va( "print \"^5You gain 10HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^51500 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^51500 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7119,12 +7119,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -2900, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 20;
 			ent->health = ent->health + 20;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 20HP\n\"" ) );
+			CP( va( "print \"^5You gain 20HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^52900 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^52900 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7135,12 +7135,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -4300, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 30;
 			ent->health = ent->health + 30;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 30HP\n\"" ) );
+			CP( va( "print \"^5You gain 30HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^54300 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^54300 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7151,12 +7151,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -5700, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 40;
 			ent->health = ent->health + 40;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 40HP\n\"" ) );
+			CP( va( "print \"^5You gain 40HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^55700 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^55700 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7167,12 +7167,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -7100, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 50;
 			ent->health = ent->health + 50;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 50HP\n\"" ) );
+			CP( va( "print \"^5You gain 50HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^57100 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^57100 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7183,12 +7183,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -8500, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 60;
 			ent->health = ent->health + 60;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 60HP\n\"" ) );
+			CP( va( "print \"^5You gain 60HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^58500 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^58500 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7199,12 +7199,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -9900, qfalse );
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->client->ps.stats[STAT_MAX_HEALTH] + 70;
 			ent->health = ent->health + 70;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You gain 70HP\n\"" ) );
+			CP( va( "print \"^5You gain 70HP\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^59900 ^7Credits\n\"" ) );
+			CP( va( "print \"You need ^59900 ^7Credits\n\"" ) );
 			return qfalse;
 		}
 	}
@@ -7214,7 +7214,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 		{
 			G_AddCreditToClient( ent->client, -BUBBLES_COST, qfalse );
 			ADMP( va( "%s^7 ^2has bought bubbles!\n", ent->client->pers.netname ) );
-			trap_SendServerCommand( ent - g_entities, va( "print \"^3You can turn bubbles off by typing '!buy bubbles' again\n\"" ) );
+			CP( va( "print \"^3You can turn bubbles off by typing '!buy bubbles' again\n\"" ) );
 			ent->client->pers.bubble = qtrue;
 			ent->client->pers.bubbletime = 500;
 			return qtrue;
@@ -7223,12 +7223,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 		{
 			ent->client->pers.bubble = qfalse;
 			ent->client->pers.bubbletime = 0;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^3Bubbles has been turned off!\n\"" ) );
+			CP( va( "print \"^3Bubbles has been turned off!\n\"" ) );
 			return qfalse;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", BUBBLES_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", BUBBLES_COST ) );
 			return qfalse;
 		}
 	}
@@ -7250,12 +7250,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			}
 			G_GiveClientMaxAmmo( ent, hasEnergyWeapon );
 			ClientUserinfoChanged( ent->client->ps.clientNum );
-			trap_SendServerCommand( ent - g_entities, va( "print \"^2Ammo reloaded!\n\"" ) );
+			CP( va( "print \"^2Ammo reloaded!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", AMMO_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", AMMO_COST ) );
 		}
 		return qfalse;
 	}
@@ -7263,7 +7263,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	{
 		if( ent->health <= 0 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You must be alive\n\"" ) );
+			CP( va( "print \"^1You must be alive\n\"" ) );
 			return qfalse;
 		}
 		if( ent->health != ent->client->ps.stats[STAT_MAX_HEALTH] )
@@ -7277,12 +7277,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			}
 			else
 			{
-				trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", HEALTH_COST ) );
+				CP( va( "print \"You need ^5%d ^7Credits\n\"", HEALTH_COST ) );
 			}
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You cannot heal at full health\n\"" ) );
+			CP( va( "print \"^1You cannot heal at full health\n\"" ) );
 		}
 		return qfalse;
 	}
@@ -7290,7 +7290,7 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	{
 		if( ent->client->pers.regen == 1 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You have Regeneration already\n\"" ) );
+			CP( va( "print \"^1You have Regeneration already\n\"" ) );
 			return qfalse;
 		}
 		if( ent->client->pers.credit >= REGEN_COST && !ent->client->pers.doubleregen )
@@ -7298,13 +7298,13 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			G_AddCreditToClient( ent->client, -REGEN_COST, qfalse );
 			ent->client->pers.regen = 1;
 			ent->client->pers.saved = qtrue;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You received Regeneration!\n\"" ) );
-			trap_SendServerCommand( ent - g_entities, va( "print \"^3You have unlocked ^5Double Regeneration^3!\n\"" ) );
+			CP( va( "print \"^5You received Regeneration!\n\"" ) );
+			CP( va( "print \"^3You have unlocked ^5Double Regeneration^3!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", REGEN_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", REGEN_COST ) );
 			return qfalse;
 		}
 	}
@@ -7312,12 +7312,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 	{
 		if( ent->client->pers.doubleregen == 1 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You have Double Regeneration already\n\"" ) );
+			CP( va( "print \"^1You have Double Regeneration already\n\"" ) );
 			return qfalse;
 		}
 		if( ent->client->pers.regen == 0 )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"^1You must first buy normal regeneration\n\"" ) );
+			CP( va( "print \"^1You must first buy normal regeneration\n\"" ) );
 		}
 		if( ent->client->pers.regen == 1 && ent->client->pers.credit >= DOUBLEREGEN_COST )
 		{
@@ -7325,12 +7325,12 @@ qboolean G_buy( gentity_t *ent, int skiparg )
 			ent->client->pers.doubleregen = 1;
 			ent->client->pers.regen = 0;
 			ent->client->pers.saved = qtrue;
-			trap_SendServerCommand( ent - g_entities, va( "print \"^5You received Double Regeneration!\n\"" ) );
+			CP( va( "print \"^5You received Double Regeneration!\n\"" ) );
 			return qtrue;
 		}
 		else
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEREGEN_COST ) );
+			CP( va( "print \"You need ^5%d ^7Credits\n\"", DOUBLEREGEN_COST ) );
 			return qfalse;
 		}
 	}

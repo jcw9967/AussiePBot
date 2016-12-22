@@ -93,7 +93,8 @@ typedef struct
 
 typedef enum
 {
-  ATTACKING,
+  ATTACK_ENEMY,
+  FOLLOW_FRIEND,
   TARGET_PATH,
   FIND_NEXT_PATH,
   FIND_NEW_PATH
@@ -215,8 +216,10 @@ struct gentity_s
   //for targeting following
   int			nearestNodeIndex;
   gentity_t		*botEnemy;
+  gentity_t		*botFriend;
   int			enemytime;
   int			botEnemyLastSeen;
+  int			botFriendLastSeen;
   int			botSkillLevel;
   qboolean		nextNode;
   qboolean		pathChosen;

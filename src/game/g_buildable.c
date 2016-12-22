@@ -699,7 +699,7 @@ void ASpawn_Think( gentity_t *self )
 						velocity[2] = g_antiSpawnBlock.integer;
 
 						VectorAdd( ent->client->ps.velocity, velocity, ent->client->ps.velocity );
-						trap_SendServerCommand( ent - g_entities, "cp \"Don't spawn block!\"" );
+						CP( "cp \"Don't spawn block!\"" );
 					}
 					else if( !self->spawnBlockTime )
 						self->spawnBlockTime = level.time;
@@ -2559,7 +2559,7 @@ void HSpawn_Think( gentity_t *self )
 						velocity[2] = g_antiSpawnBlock.integer;
 
 						VectorAdd( ent->client->ps.velocity, velocity, ent->client->ps.velocity );
-						trap_SendServerCommand( ent - g_entities, "cp \"Don't spawn block!\"" );
+						CP( "cp \"Don't spawn block!\"" );
 					}
 					else if( !self->spawnBlockTime )
 						self->spawnBlockTime = level.time;

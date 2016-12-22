@@ -87,6 +87,8 @@ void G_BotAdd( char *name, int skill, int ignore )
 		//default bot data
 		bot->botEnemy = NULL;
 		bot->botEnemyLastSeen = 0;
+		bot->botFriend = NULL;
+		bot->botFriendLastSeen = 0;
 
 		if( skill > 360 )
 		{
@@ -184,15 +186,22 @@ qboolean botAimAtPath( gentity_t *self )
  */
 void G_FrameAim( gentity_t *self )
 {
+	//If we're spawned
 	if( self->client->ps.stats[STAT_PCLASS] != PCL_NONE )
 	{
-		if( self->botEnemy )
+		switch( self->state )
 		{
-			botAimAtTarget( self, self->botEnemy );
-		}
-		else
-		{
-			botAimAtPath( self );
+			case ATTACK_ENEMY:
+				botAimAtTarget( self, self->botEnemy );
+				break;
+				
+			case FOLLOW_FRIEND:
+				botAimAtTarget( self, self->botFriend );
+				break;
+			
+			default:
+				botAimAtPath( self );
+				break;
 		}
 	}
 }
@@ -204,18 +213,33 @@ void G_FastThink( gentity_t *self )
 {
 	if( self->client->ps.stats[STAT_PCLASS] != PCL_NONE )
 	{
-		if( self->botEnemy )
+		if( self->state == ATTACK_ENEMY )
 		{
 			//Make sure we can still attack our enemy
 			if( !botTargetInRange( self, self->botEnemy ) )
 			{
 				//Dead enemy or we can't see them anymore
 				self->botEnemy = NULL;
+				self->state = FIND_NEW_PATH;
 			}
 			else
 			{
 				botShootIfTargetInRange( self, self->botEnemy );
 				self->enemytime = level.time;
+			}
+		}
+		else if( self->state == FOLLOW_FRIEND )
+		{
+			//Make sure we can still attack our enemy
+			if( !botTargetInRange( self, self->botFriend ) )
+			{
+				//Dead enemy or we can't see them anymore
+				self->botFriend = NULL;
+				self->state = FIND_NEW_PATH;
+			}
+			else
+			{
+				self->botFriendLastSeen = level.time;
 			}
 		}
 		else if( self->state == TARGET_PATH )
@@ -676,13 +700,14 @@ void G_BotThink( gentity_t *self )
 			Bot_Evolve( self );
 		}
 
-		if( self->botEnemy )
+		if( self->state == ATTACK_ENEMY )
 		{
 			//Make sure we can still attack our enemy
 			if( !botTargetInRange( self, self->botEnemy ) )
 			{
 				//dead enemy or we can't see them anymore
 				self->botEnemy = NULL;
+				self->state = FIND_NEW_PATH;
 			}
 		}
 		else
@@ -695,12 +720,29 @@ void G_BotThink( gentity_t *self )
 				if( tempEntityIndex >= 0 )
 				{
 					self->botEnemy = &g_entities[tempEntityIndex];
+					self->state = ATTACK_ENEMY;
 				}
 			}
 		}
+		
+		if( self->state != ATTACK_ENEMY )
+		{
+			//Try and find a friend
+			if( level.time - self->searchtime > 0 )
+			{
+				self->searchtime = level.time;
+				tempEntityIndex = botFindClosestFriend( self, qfalse );
+				if( tempEntityIndex >= 0 )
+				{
+					self->botFriend = &g_entities[tempEntityIndex];
+					self->state = FOLLOW_FRIEND;
+				}
+			}
+			
+		}
 
 		//We may have found them. Check again.
-		if( self->botEnemy )
+		if( self->state = ATTACK_ENEMY )
 		{
 			botShootIfTargetInRange( self, self->botEnemy );
 			self->enemytime = level.time;
@@ -740,6 +782,10 @@ void G_BotThink( gentity_t *self )
 				}
 			}
 		}
+		else if( self->state == FOLLOW_FRIEND )
+		{
+			self->botFriendLastSeen = level.time;
+		}
 		//Keep travelling along our path. Check for blockages.
 		else if( self->state == TARGET_PATH )
 		{
@@ -761,8 +807,10 @@ void G_BotThink( gentity_t *self )
 				self->isBlocked = qfalse;
 			}
 		}
-
-		pathFinding( self ); //Roam the map.
+		else
+		{
+			pathFinding( self ); //Roam the map.
+		}
 	}
 }
 
@@ -960,6 +1008,29 @@ int botFindClosestEnemy( gentity_t *self, qboolean includeTeam )
 	return -1;
 }
 
+int botFindClosestFriend( gentity_t *self, qboolean includeTeam )
+{
+	int i;
+	gentity_t *target;
+
+	// check list for enemies
+	for( i = 0; i < MAX_GENTITIES; i++ )
+	{
+		target = &g_entities[i];
+
+		if( self != target
+			&& target->client
+			&& target->client->ps.stats[STAT_PTEAM] == self->client->ps.stats[STAT_PTEAM]
+			&& botGetDistanceBetweenPlayer( self, target ) < g_ambush_range.integer
+			&& botTargetInRange( self, target ) )
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 /**
  * Partially new implementation
  *
@@ -1084,6 +1155,7 @@ qboolean botShootIfTargetInRange( gentity_t *self, gentity_t *target )
 	else
 	{
 		self->botEnemy = NULL;
+		self->state = FIND_NEW_PATH;
 	}
 
 	return qfalse;

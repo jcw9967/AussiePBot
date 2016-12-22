@@ -1118,7 +1118,7 @@ void ClientUserinfoChanged( int clientNum )
 
 		if( client->pers.muted )
 		{
-			trap_SendServerCommand( ent - g_entities,
+			CP(
 				"print \"You cannot change your name while you are muted\n\"" );
 			revertName = qtrue;
 		}
@@ -1126,7 +1126,7 @@ void ClientUserinfoChanged( int clientNum )
 			( level.time - client->pers.nameChangeTime )
 			<= ( g_minNameChangePeriod.value * 1000 ) )
 		{
-			trap_SendServerCommand( ent - g_entities, va(
+			CP( va(
 				"print \"Name change spam protection (g_minNameChangePeriod = %d)\n\"",
 				g_minNameChangePeriod.integer ) );
 			revertName = qtrue;
@@ -1134,14 +1134,14 @@ void ClientUserinfoChanged( int clientNum )
 		else if( g_maxNameChanges.integer > 0
 			&& client->pers.nameChanges >= g_maxNameChanges.integer )
 		{
-			trap_SendServerCommand( ent - g_entities, va(
+			CP( va(
 				"print \"Maximum name changes reached (g_maxNameChanges = %d)\n\"",
 				g_maxNameChanges.integer ) );
 			revertName = qtrue;
 		}
 		else if( !G_admin_name_check( ent, newname, err, sizeof( err ) ) )
 		{
-			trap_SendServerCommand( ent - g_entities, va( "print \"%s\n\"", err ) );
+			CP( va( "print \"%s\n\"", err ) );
 			revertName = qtrue;
 		}
 
@@ -1540,7 +1540,7 @@ void ClientBegin( int clientNum )
 		}
 
 	// request the clients PTR code
-		trap_SendServerCommand( ent - g_entities, "ptrcrequest" );
+		CP( "ptrcrequest" );
 	}
 
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
@@ -1709,8 +1709,6 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
 	ent->waterlevel = 0;
 	ent->watertype = 0;
 	ent->flags = 0;
-	ent->state = FIND_NEW_PATH;
-	ent->botEnemy = NULL;
 	ent->pathid = -1;
 	ent->movepathid = -1;
 	ent->discpathid = -1;
